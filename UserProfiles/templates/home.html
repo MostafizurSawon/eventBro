@@ -1,0 +1,146 @@
+{% load static %}
+
+{% block content %}
+<section class="main-home container-fluid my-4 pt-5">
+  <!-- Messages -->
+  {% if messages %}
+  <div class="container my-5">
+    {% for message in messages %}
+      <div class="alert 
+          {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %} 
+          alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  </div>
+
+  <script>
+    setTimeout(() => {
+      let alerts = document.querySelectorAll('.alert');
+      alerts.forEach(alert => {
+        let bsAlert = new bootstrap.Alert(alert);
+        bsAlert.close();
+      });
+    }, 3000); 
+  </script>
+  {% endif %}
+
+  <section class="main-home pt-5 container-fluid">
+    <!-- Search and Filter Form -->
+    <div class="w-50 mx-auto">
+      <form method="GET" action="{% url 'home' %}">
+        <div class="input-group mb-3">
+          <select name="category" class="btn btn-outline-secondary">
+            <option value="">All Categories</option>
+            {% for category in categories %}
+              <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+          </select>
+          <input type="text" name="search" class="form-control" placeholder="Search by name">
+          <button type="submit" class="btn btn-info">Search</button>
+        </div>
+      </form>
+    </div>
+
+    {% if ev %}
+      <div class="my-5 text-success">
+        <h2>All Events</h2>
+        <hr>
+      </div>
+      <div class="row d-flex justify-content-center g-2">
+        {% for event in ev %}
+        <div class="col-md-4">
+          <div class="card custom-card">
+            <div class="card-header d-flex align-items-center">
+              <div class="text-center d-flex align-items-center">
+                <img src="{{ event.owner.account.image }}" class="img-fluid rounded-circle" height="50" width="50" alt="{{ event.owner.username }}" />
+              </div>
+              <div class="ms-3">
+                <h6 class="mb-0 fs-sm text-success">{{ event.owner.first_name }} {{ event.owner.last_name }} ({{ event.owner.username }})</h6>
+                <span class="text-muted fs-sm">{{ event.created_date }}</span>
+              </div>
+              <div class="dropstart ms-auto">
+                <button class="btn text-muted" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="fas fa-ellipsis-v"></i> 
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="{% url 'update_event' event.id %}">Edit</a></li>
+                  <li><a class="dropdown-item" href="{% url 'delete_event' event.id %}">Delete</a></li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-body">
+              <h5 class="card-title">Name: {{ event.name }}</h5>
+              <p class="card-text">Location: {{ event.location }}</p>
+              <p class="card-text">Category: {{ event.cat }}</p>
+              <p class="card-text">Event date: {{ event.date }}</p>
+              <p class="card-text">Seat available: {% if event.limit < 3 %}<span class="text-danger fw-bolder">{{ event.limit }}</span></p>
+              {% else %}
+              <span class="text-success fw-bolder">{{ event.limit }}</span></p>
+              {% endif %}
+              <p class="card-text">
+                Description: {{ event.description|slice:":100" }}
+                {% if event.description|length > 100 %}
+                  <a class="btn btn-link text-decoration-none" data-bs-toggle="modal" data-bs-target="#descriptionModal{{ event.id }}">
+                    Read More...
+                  </a>
+                {% endif %}
+              </p>
+              
+              <!-- Bootstrap Modal -->
+              <div class="modal fade" id="descriptionModal{{ event.id }}" tabindex="-1" aria-labelledby="descriptionModalLabel{{ event.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="descriptionModalLabel{{ event.id }}">Full Description</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      {{ event.description }}
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer d-flex">
+              <button class="btn p-0 me-auto fw-bold text-muted">Posted: {{ event.created_date }}</button>
+              {% if event.id in booked_events %}
+                  <button class="btn btn-success" style="background-color: #28a745; border: none;">
+                      <i class="fas fa-check-circle me-2"></i>
+                      Event Booked
+                  </button>
+              {% else %}
+                  <a class="btn btn-link p-0 me-auto fw-bold" href="{% url 'book_event' event.id %}">Book Now</a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <section class="py-3 py-md-5 min-vh-100 d-flex justify-content-center align-items-center">
+        <div class="container">
+          <div class="row">
+            <div class="col-12">
+              <div class="text-center">
+                <h2 class="d-flex justify-content-center align-items-center gap-2 mb-4">
+                  <span class="display-1 fw-bold">4</span>
+                  <i class="bi bi-exclamation-circle-fill text-danger display-4"></i>
+                  <span class="display-1 fw-bold bsb-flip-h">4</span>
+                </h2>
+                <h3 class="h2 mb-2">Oops! You're lost.</h3>
+                <p class="mb-5">No events found matching your search criteria.</p>
+                <a class="btn bsb-btn-5xl btn-dark rounded-pill px-5 fs-6 m-0" href="{% url 'home' %}" role="button">Back to Home</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    {% endif %}
+  </section>
+</section>
+{% endblock content %}
